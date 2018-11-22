@@ -8,19 +8,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/traceto/utility_eth.git"
+    "url": "git@github.com:tracetoio/tracetoio-eth-lib.git"
   },
-  "author": "",
+  "author": "tracetoio-team",
   "license": "MIT",
-  "homepage": "https://bitbucket.org/traceto/utility_eth#readme",
+  "homepage": "https://docs.traceto.io",
   "dependencies": {
     "async": "^2.6.1",
     "ethereumjs-util": "^5.2.0",
     "jasmine": "^3.1.0",
     "web3": "^1.0.0-beta.36"
-  },
-  "publishConfig": {
-    "registry": "https://nexus.traceto.io/repository/npm-local/"
   },
   "devDependencies": {
     "chai": "^4.1.2",
