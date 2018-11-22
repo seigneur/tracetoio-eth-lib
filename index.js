@@ -5,16 +5,20 @@ class traceto_web3{
 	constructor(wss_url="wss://websocket.alpha.traceto.io/ws"){
 		this.provider = new Web3.providers.WebsocketProvider(wss_url);
     	this.web3 = new Web3(this.provider);
-    	this.provider.on('error', e => {
-    		this.provider = new Web3.providers.WebsocketProvider(wss_url);
-    		this.web3.setProvider(this.provider);
-    	});
-  		this.provider.on('end', e => {
-  			this.provider = new Web3.providers.WebsocketProvider(wss_url);
-    		this.web3.setProvider(this.provider);
-  		});
+		this.connectWeb3(wss_url);
     	this.contracts = [];
     	this.contractNames = {};
+	}
+
+	connectWeb3(wss_url){
+		this.provider = new Web3.providers.WebsocketProvider(wss_url);
+		this.web3.setProvider(this.provider);
+
+		this.provider.on('error', err => {
+			this.connectWeb3(wss_url);
+    	});
+  		this.provider.on('end', err => {
+  		});
 	}
 
 	addContract(name, address, ABI){
@@ -93,4 +97,3 @@ class traceto_web3{
 }
 
 module.exports = traceto_web3;
-
