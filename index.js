@@ -2,95 +2,98 @@ const Web3 = require('web3');
 const eutil = require('ethereumjs-util');
 
 class traceto_web3{
-	constructor(wss_url="wss://websocket.alpha.traceto.io/ws"){
-		this.provider = new Web3.providers.WebsocketProvider(wss_url);
-    	this.web3 = new Web3(this.provider);
-    	this.provider.on('error', e => {
-    		this.provider = new Web3.providers.WebsocketProvider(wss_url);
-    		this.web3.setProvider(this.provider);
-    	});
-  		this.provider.on('end', e => {
-  			this.provider = new Web3.providers.WebsocketProvider(wss_url);
-    		this.web3.setProvider(this.provider);
-  		});
-    	this.contracts = [];
-    	this.contractNames = {};
-	}
+    constructor(wss_url="wss://websocket.alpha.traceto.io/ws"){
+        this.provider = new Web3.providers.WebsocketProvider(wss_url);
+        this.web3 = new Web3(this.provider);
+        this.connectWeb3(wss_url);
+        this.contracts = [];
+        this.contractNames = {};
+    }
 
-	addContract(name, address, ABI){
-		this.contracts.push(new this.web3.eth.Contract(ABI, address));
-		this.contractNames[name] = this.contracts.length - 1;
-		return this.contracts.length - 1;
-	}
+    connectWeb3(wss_url){
+        this.provider = new Web3.providers.WebsocketProvider(wss_url);
+        this.web3.setProvider(this.provider);
 
-	getGasPrice(){
-		return this.web3.eth.getGasPrice();
-	}
+        this.provider.on('error', err => {
+            this.connectWeb3(wss_url);
+        });
+        this.provider.on('end', err => {
+        });
+    }
 
-	setWallet(priKey){
-		this.priKey = priKey.includes('0x')?priKey.slice(2):priKey;
-		this.web3.eth.accounts.wallet.add(this.web3.eth.accounts.privateKeyToAccount(priKey));
-		this.web3.eth.defaultAccount = this.web3.eth.accounts.wallet[0].address;
-	}
+    addContract(name, address, ABI){
+        this.contracts.push(new this.web3.eth.Contract(ABI, address));
+        this.contractNames[name] = this.contracts.length - 1;
+        return this.contracts.length - 1;
+    }
 
-	sign(msg){
-		return this.web3.eth.accounts.sign(msg, this.priKey);
-	}
+    getGasPrice(){
+        return this.web3.eth.getGasPrice();
+    }
 
-	getWalletAddress(){
-		return this.web3.eth.accounts.wallet[0].address;
-	}
+    setWallet(priKey){
+        this.priKey = priKey.includes('0x')?priKey.slice(2):priKey;
+        this.web3.eth.accounts.wallet.add(this.web3.eth.accounts.privateKeyToAccount(priKey));
+        this.web3.eth.defaultAccount = this.web3.eth.accounts.wallet[0].address;
+    }
 
-	getWalletPubKey(){
-		return '0x'+eutil.privateToPublic(this.web3.eth.accounts.wallet[0].privateKey).toString('hex');
-	}
+    sign(msg){
+        return this.web3.eth.accounts.sign(msg, this.priKey);
+    }
 
-	callContractbyIdx(idx, func_name, callback, ...paras){
-		return this.contracts[idx].methods[func_name](...paras).call({}, callback);
-	}
+    getWalletAddress(){
+        return this.web3.eth.accounts.wallet[0].address;
+    }
 
-	callContractbyName(name, func_name, callback, ...paras){
-		return this.contracts[this.contractNames[name]].methods[func_name](...paras).call({}, callback);
-	}
+    getWalletPubKey(){
+        return '0x'+eutil.privateToPublic(this.web3.eth.accounts.wallet[0].privateKey).toString('hex');
+    }
 
-	sendToContractbyIdx(idx, func_name, gasPrice, callback, ...paras){
-		const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
-		const gasLimitHex = this.web3.utils.numberToHex(7500000);
-		if(callback)
-			return this.contracts[idx].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
-		else
-			return this.contracts[idx].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
-	}
+    callContractbyIdx(idx, func_name, callback, ...paras){
+        return this.contracts[idx].methods[func_name](...paras).call({}, callback);
+    }
 
-	sendToContractbyName(name, func_name, gasPrice, callback, ...paras){
-		const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
-		const gasLimitHex = this.web3.utils.numberToHex(7500000);
-		if(callback)
-			return this.contracts[this.contractNames[name]].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
-		else
-			return this.contracts[this.contractNames[name]].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
-	}	
+    callContractbyName(name, func_name, callback, ...paras){
+        return this.contracts[this.contractNames[name]].methods[func_name](...paras).call({}, callback);
+    }
 
-	getAllContractEventbyId(idx){
-		return this.contracts[idx].events.allEvents({fromBlock: 'latest'});
-	}
+    sendToContractbyIdx(idx, func_name, gasPrice, callback, ...paras){
+        const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
+        const gasLimitHex = this.web3.utils.numberToHex(7500000);
+        if(callback)
+            return this.contracts[idx].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
+        else
+            return this.contracts[idx].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
+    }
 
-	getAllContractEventbyName(name){
-		return this.contracts[this.contractNames[name]].events.allEvents({fromBlock: 'latest'});
-	}
+    sendToContractbyName(name, func_name, gasPrice, callback, ...paras){
+        const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
+        const gasLimitHex = this.web3.utils.numberToHex(7500000);
+        if(callback)
+            return this.contracts[this.contractNames[name]].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
+        else
+            return this.contracts[this.contractNames[name]].methods[func_name](...paras).send({"from":this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
+    }   
 
-	getContractEventbyId(idx, event_name){
-		return this.contracts[idx].events[event_name]({fromBlock: 'latest'});
-	}
+    getAllContractEventbyId(idx){
+        return this.contracts[idx].events.allEvents({fromBlock: 'latest'});
+    }
 
-	getContractEventbyName(name, event_name){
-		return this.contracts[this.contractNames[name]].events[event_name]({fromBlock: 'latest'});
-	}
-	
-	getTransactionCount(walletAddress){
-		return this.web3.eth.getTransactionCount(walletAddress);
-	}
+    getAllContractEventbyName(name){
+        return this.contracts[this.contractNames[name]].events.allEvents({fromBlock: 'latest'});
+    }
+
+    getContractEventbyId(idx, event_name){
+        return this.contracts[idx].events[event_name]({fromBlock: 'latest'});
+    }
+
+    getContractEventbyName(name, event_name){
+        return this.contracts[this.contractNames[name]].events[event_name]({fromBlock: 'latest'});
+    }
+    
+    getTransactionCount(walletAddress){
+        return this.web3.eth.getTransactionCount(walletAddress);
+    }
 }
 
 module.exports = traceto_web3;
-

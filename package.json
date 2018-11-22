@@ -1,6 +1,6 @@
 {
   "name": "tracetoio-eth-lib",
-  "version": "1.0.14",
+  "version": "1.0.18",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git@github.com:tracetoio/tracetoio-eth-lib.git"
   },
-  "author": "",
+  "author": "tracetoio-team",
   "license": "MIT",
   "homepage": "https://docs.traceto.io",
   "dependencies": {
