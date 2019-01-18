@@ -12,24 +12,24 @@ class tracetoWeb3{
   }
 
   connectWeb3(providerUrl){
-    if(providerUrl.startsWith('ws://') || providerUrl.startsWith('wss://'))
+    if(providerUrl.startsWith('ws://') || providerUrl.startsWith('wss://')){
       this.provider = new Web3.providers.WebsocketProvider(providerUrl);
+      this.provider.on('connect', () => {
+        this.event.emit('web3Connected');
+      });
+      this.provider.on('error', () => {
+        this.event.emit('web3Error');
+      });
+      this.provider.on('end', () => {
+        this.event.emit('web3End');
+        this.connectWeb3(providerUrl);
+      });
+    }
     else if(providerUrl.startsWith('http://') || providerUrl.startsWith('https://'))
       this.provider = new Web3.providers.HttpProvider(providerUrl);
     else
       this.provider = null;
     this.web3.setProvider(this.provider);
-    
-    this.provider.on('connect', () => {
-      this.event.emit('web3Connected');
-    });
-    this.provider.on('error', () => {
-      this.event.emit('web3Error');
-    });
-    this.provider.on('end', () => {
-      this.event.emit('web3End');
-      this.connectWeb3(providerUrl);
-    });
   }
 
   addContract(name, address, ABI){
