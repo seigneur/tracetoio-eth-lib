@@ -3,29 +3,33 @@ const eutil = require('ethereumjs-util');
 const EventEmitter = require('events');
 
 class tracetoWeb3{
-  constructor(wssUrl='wss://websocket.alpha.traceto.io/ws'){
-    this.provider = new Web3.providers.WebsocketProvider(wssUrl);
-    this.web3 = new Web3(this.provider);
+  constructor(providerUrl='wss://websocket.alpha.traceto.io/ws'){
+    this.web3 = new Web3();
     this.event = new EventEmitter();
-    this.connectWeb3(wssUrl);
+    this.connectWeb3(providerUrl);
     this.contracts = [];
     this.contractNames = {};
   }
 
-  connectWeb3(wssUrl){
-    this.provider = new Web3.providers.WebsocketProvider(wssUrl);
+  connectWeb3(providerUrl){
+    if(providerUrl.startsWith('ws://') || providerUrl.startsWith('wss://')){
+      this.provider = new Web3.providers.WebsocketProvider(providerUrl);
+      this.provider.on('connect', () => {
+        this.event.emit('web3Connected');
+      });
+      this.provider.on('error', () => {
+        this.event.emit('web3Error');
+      });
+      this.provider.on('end', () => {
+        this.event.emit('web3End');
+        this.connectWeb3(providerUrl);
+      });
+    }
+    else if(providerUrl.startsWith('http://') || providerUrl.startsWith('https://'))
+      this.provider = new Web3.providers.HttpProvider(providerUrl);
+    else
+      this.provider = null;
     this.web3.setProvider(this.provider);
-    
-    this.provider.on('connect', () => {
-      this.event.emit('web3Connected');
-    });
-    this.provider.on('error', () => {
-      this.connectWeb3(wssUrl);
-    });
-    this.provider.on('end', () => {
-      this.event.emit('web3End');
-      this.event.emit('web3Error');
-    });
   }
 
   addContract(name, address, ABI){
