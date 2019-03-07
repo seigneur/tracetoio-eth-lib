@@ -60,31 +60,51 @@ class tracetoWeb3{
     return '0x'+eutil.privateToPublic(this.web3.eth.accounts.wallet[0].privateKey).toString('hex');
   }
 
-  callContractbyIdx(idx, funcName, callback, ...paras){
-    return this.contracts[idx].methods[funcName](...paras).call({}, callback);
+  callContractbyIdx(idx, funcName, ...paras){
+    const _this = this;
+    return new Promise((resolve, reject) => {
+      _this.contracts[idx].methods[funcName](...paras).call({}, (err, data) => {
+        if(!err)
+          resolve(data);
+        else
+          reject(err);
+      });
+    });
   }
 
-  callContractbyName(name, funcName, callback, ...paras){
-    return this.contracts[this.contractNames[name]].methods[funcName](...paras).call({}, callback);
+  callContractbyName(name, funcName, ...paras){
+    const _this = this;
+    return new Promise((resolve, reject) => {
+      _this.contracts[this.contractNames[name]].methods[funcName](...paras).call({}, (err, data) => {
+        if(!err)
+          resolve(data);
+        else
+          reject(err);
+      });
+    });
   }
 
-  sendToContractbyIdx(idx, funcName, gasPrice, callback, ...paras){
+  sendToContractbyIdx(idx, funcName, gasPrice, ...paras){
+    const _this = this;
     const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
     const gasLimitHex = this.web3.utils.numberToHex(7500000);
-    if(callback)
-      return this.contracts[idx].methods[funcName](...paras).send({'from':this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
-    else
-      return this.contracts[idx].methods[funcName](...paras).send({'from':this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
+    return new Promise((resolve, reject) => {
+      _this.contracts[idx].methods[funcName](...paras).send({'from':_this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex})
+      .then(receipt => resolve(receipt))
+      .catch(err => reject(err));
+    });
   }
 
-  sendToContractbyName(name, funcName, gasPrice, callback, ...paras){
+  sendToContractbyIdx(idx, funcName, gasPrice, ...paras){
+    const _this = this;
     const gasPriceHex = this.web3.utils.numberToHex(gasPrice);
     const gasLimitHex = this.web3.utils.numberToHex(7500000);
-    if(callback)
-      return this.contracts[this.contractNames[name]].methods[funcName](...paras).send({'from':this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex}, callback);
-    else
-      return this.contracts[this.contractNames[name]].methods[funcName](...paras).send({'from':this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex});
-  }   
+    return new Promise((resolve, reject) => {
+      _this.contracts[idx].methods[funcName](...paras).send({'from':_this.web3.eth.accounts.wallet[0].address, 'gasPrice': gasPriceHex, 'gasLimit': gasLimitHex})
+      .then(receipt => resolve(receipt))
+      .catch(err => reject(err));
+    });
+  }
 
   getAllContractEventbyId(idx, fromBlock='latest'){
     return this.contracts[idx].events.allEvents({fromBlock: fromBlock});
